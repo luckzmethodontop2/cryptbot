@@ -1,24 +1,27 @@
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
+local monsterSpawns = game.workspace:FindFirstChild("MonsterSpawns")
+local CryptBotPath = "CryptBot"
 
--- Ensure PlayerGui is loaded
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Wait for StartMenu to be available, skip if not present
-local startMenu = playerGui:WaitForChild("StartMenu", 10) -- Wait up to 10 seconds for StartMenu
-
-if startMenu then
-    -- Send the mouse click events only after StartMenu is loaded
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)  -- Mouse button press
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0) -- Mouse button release
-
-    task.wait(2) -- Optional wait, adjust if necessary
+if monsterSpawns then
+    local triggers = monsterSpawns:FindFirstChild("Triggers")
+    if triggers then
+        triggers:Destroy()
+        print("Monster spawn triggers destroyed.")
+    else
+        print("No triggers found in MonsterSpawns.")
+    end
 else
-    warn("StartMenu not found after waiting.")
+    print("No MonsterSpawns found in workspace.")
 end
 
-    
+-- Ensure PlayerGui is loaded, but skip if StartMenu is not present
+local playerGui = player:WaitForChild("PlayerGui")
+local startMenu = playerGui:FindFirstChild("StartMenu")
 
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
+task.wait(2)
 
 local RunService = game:GetService("RunService")
 local waypoints = {
@@ -170,3 +173,21 @@ while true do
         break
     end
 end
+
+-- Keybind for F1 to disable CryptBot and kick the player
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.KeyCode == Enum.KeyCode.F1 then
+        -- Delete the CryptBot file if it exists
+        if isfile(CryptBotPath) then
+            delfile(CryptBotPath)
+            print("CryptBot file deleted.")
+        end
+
+        -- Kick the player with the message
+        player:Kick("CryptBot disabled.")
+    end
+end)
