@@ -1,16 +1,20 @@
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
 
--- Ensure PlayerGui is loaded
+-- Ensure PlayerGui is loaded, but skip if StartMenu is not present
 local playerGui = player:WaitForChild("PlayerGui")
-local startMenu = playerGui:WaitForChild("StartMenu")
+local startMenu = playerGui:FindFirstChild("StartMenu")
 
--- Simulate a left click at (109, 1194)
-VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
-VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
-task.wait(2)
-
-game.workspace.MonsterSpawns.Triggers:Destroy()
+-- If StartMenu doesn't exist, proceed anyway
+if startMenu then
+    -- Simulate a left click at (109, 1194)
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
+    task.wait(2)
+    
+    -- Continue with the rest of the code only if StartMenu exists
+    game.workspace.MonsterSpawns.Triggers:Destroy()
+end
 
 local RunService = game:GetService("RunService")
 local waypoints = {
