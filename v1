@@ -24,11 +24,12 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         -- Delete the CryptBot file if it exists
         if isfile(CryptBotPath) then
             delfile(CryptBotPath)
+  player:Kick("CryptBot disabled.")
             print("CryptBot file deleted.")
         end
 
         -- Kick the player with the message
-        player:Kick("CryptBot disabled.")
+      
     end
 end)
 
