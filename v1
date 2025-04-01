@@ -5,16 +5,12 @@ local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local startMenu = playerGui:FindFirstChild("StartMenu")
 
--- If StartMenu doesn't exist, proceed anyway
-if startMenu then
-    -- Simulate a left click at (109, 1194)
+
     VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
     VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
     task.wait(2)
     
-    -- Continue with the rest of the code only if StartMenu exists
 
-end
 
 local RunService = game:GetService("RunService")
 local waypoints = {
