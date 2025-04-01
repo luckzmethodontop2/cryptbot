@@ -1,6 +1,6 @@
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
-
+workspace.MonsterSpawns.Triggers:Destroy()
 -- Ensure PlayerGui is loaded, but skip if StartMenu is not present
 local playerGui = player:WaitForChild("PlayerGui")
 local startMenu = playerGui:FindFirstChild("StartMenu")
