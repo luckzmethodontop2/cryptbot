@@ -1,14 +1,22 @@
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
 
--- Ensure PlayerGui is loaded, but skip if StartMenu is not present
+-- Ensure PlayerGui is loaded
 local playerGui = player:WaitForChild("PlayerGui")
-local startMenu = playerGui:FindFirstChild("StartMenu")
 
+-- Wait for StartMenu to be available, skip if not present
+local startMenu = playerGui:WaitForChild("StartMenu", 10) -- Wait up to 10 seconds for StartMenu
 
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
-    task.wait(2)
+if startMenu then
+    -- Send the mouse click events only after StartMenu is loaded
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)  -- Mouse button press
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0) -- Mouse button release
+
+    task.wait(2) -- Optional wait, adjust if necessary
+else
+    warn("StartMenu not found after waiting.")
+end
+
     
 
 
