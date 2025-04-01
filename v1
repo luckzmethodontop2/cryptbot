@@ -15,6 +15,22 @@ if monsterSpawns then
 else
     print("No MonsterSpawns found in workspace.")
 end
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.KeyCode == Enum.KeyCode.F1 then
+        -- Delete the CryptBot file if it exists
+        if isfile(CryptBotPath) then
+            delfile(CryptBotPath)
+            print("CryptBot file deleted.")
+        end
+
+        -- Kick the player with the message
+        player:Kick("CryptBot disabled.")
+    end
+end)
 
 -- Ensure PlayerGui is loaded properly
 local playerGui = player:WaitForChild("PlayerGui", 10)  -- Wait for up to 10 seconds
@@ -191,19 +207,3 @@ while true do
 end
 
 -- Keybind for F1 to disable CryptBot and kick the player
-local UserInputService = game:GetService("UserInputService")
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-
-    if input.KeyCode == Enum.KeyCode.F1 then
-        -- Delete the CryptBot file if it exists
-        if isfile(CryptBotPath) then
-            delfile(CryptBotPath)
-            print("CryptBot file deleted.")
-        end
-
-        -- Kick the player with the message
-        player:Kick("CryptBot disabled.")
-    end
-end)
