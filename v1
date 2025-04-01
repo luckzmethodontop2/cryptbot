@@ -37,7 +37,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- Ensure PlayerGui is loaded properly
-local playerGui = player:WaitForChild("PlayerGui", 10)  -- Wait for up to 10 seconds
+local playerGui = player:WaitForChild("PlayerGui", 3)  -- Wait for up to 10 seconds
 
 if not playerGui then
     warn("PlayerGui not found after waiting.")
@@ -45,7 +45,7 @@ if not playerGui then
 end
 
 -- Wait for StartMenu to be available, skip if not present
-local startMenu = playerGui:WaitForChild("StartMenu", 10)
+local startMenu = playerGui:WaitForChild("StartMenu", 3)
 
 if startMenu then
     -- Send the mouse click events only after StartMenu is loaded
