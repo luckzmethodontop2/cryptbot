@@ -1,3 +1,4 @@
+game.Loaded:Wait()
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
 local monsterSpawns = game.workspace:FindFirstChild("MonsterSpawns")
