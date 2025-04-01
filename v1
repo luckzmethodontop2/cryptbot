@@ -3,6 +3,7 @@ local player = game.Players.LocalPlayer
 local monsterSpawns = game.workspace:FindFirstChild("MonsterSpawns")
 local CryptBotPath = "CryptBot"
 
+-- Destroy triggers in MonsterSpawns if found
 if monsterSpawns then
     local triggers = monsterSpawns:FindFirstChild("Triggers")
     if triggers then
@@ -15,12 +16,16 @@ else
     print("No MonsterSpawns found in workspace.")
 end
 
+-- Ensure PlayerGui is loaded properly
+local playerGui = player:WaitForChild("PlayerGui", 10)  -- Wait for up to 10 seconds
 
--- Ensure PlayerGui is loaded
-local playerGui = player:WaitForChild("PlayerGui")
+if not playerGui then
+    warn("PlayerGui not found after waiting.")
+    return  -- Exit if PlayerGui is not found
+end
 
 -- Wait for StartMenu to be available, skip if not present
-local startMenu = playerGui:WaitForChild("StartMenu", 10) -- Wait up to 10 seconds for StartMenu
+local startMenu = playerGui:FindFirstChild("StartMenu")
 
 if startMenu then
     -- Send the mouse click events only after StartMenu is loaded
@@ -29,8 +34,9 @@ if startMenu then
 
     task.wait(2) -- Optional wait, adjust if necessary
 else
-    warn("StartMenu not found after waiting.")
+    warn("StartMenu not found.")
 end
+
 
 local RunService = game:GetService("RunService")
 local waypoints = {
