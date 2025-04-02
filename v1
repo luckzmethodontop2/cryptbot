@@ -324,6 +324,55 @@ end
     local step = math.min(distance, speed * RunService.Heartbeat:Wait())
     humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * step
 end
+local socketUrl = "ws://localhost:8080"
+
+-- Create the WebSocket connection
+local socket = WebSocket.connect(socketUrl)
+
+if socket then
+    print("Connected to WebSocket server!")
+
+    -- Listen for messages from the server
+    socket.OnMessage:Connect(function(message)
+        print("Message received from server: " .. message)
+    end)
+
+    -- Handle WebSocket closure
+    socket.OnClose:Connect(function()
+        print("WebSocket connection closed")
+    end)
+
+    -- Reference to the Silver TextLabel
+    local silverLabel = game:GetService("Players").LocalPlayer.PlayerGui.CurrencyGui.Silver.Value
+
+    -- Track the previous silver value
+    local previousSilverValue = tonumber(silverLabel.Text)
+
+    -- Function to send Silver value and Silver gained to WebSocket
+local function sendSilverToWebSocket(silverAmount)
+    local jsonData = game:GetService("HttpService"):JSONEncode(tonumber(silverAmount)) -- Convert to number before sending
+    socket:Send(jsonData)
+    print("Sent to WebSocket: " .. jsonData)
+end
+
+    -- Track the change in silver and calculate the gained amount
+    game:GetService("RunService").Heartbeat:Connect(function()
+        local currentSilverValue = tonumber(silverLabel.Text) -- Convert silver value to number
+
+        -- If silver value has changed, calculate the gained amount
+        if currentSilverValue ~= previousSilverValue then
+            local silverGained = currentSilverValue - previousSilverValue
+            previousSilverValue = currentSilverValue -- Update previous silver value
+
+            -- Send both total silver and silver gained to WebSocket
+            sendSilverToWebSocket(currentSilverValue, silverGained)
+        end
+    end)
+
+else
+    print("Failed to connect to WebSocket server.")
+end
+
 
 setupCharacter()
 while true do
