@@ -330,55 +330,80 @@ local RunService = game:GetService("RunService")
 
 local socketUrl = "ws://localhost:8080"
 local socket = WebSocket.connect(socketUrl)
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 if socket then
     print("Connected to WebSocket server!")
 
-    -- Send username immediately upon connection
-    local playerName = Players.LocalPlayer.Name
+    local player = Players.LocalPlayer
+    local playerName = player.Name
+    
     socket:Send(HttpService:JSONEncode({ username = playerName }))
     print("Sent username to WebSocket: " .. playerName)
 
-    -- Reference to the Silver TextLabel
-    local silverLabel = Players.LocalPlayer.PlayerGui.CurrencyGui.Silver.Value
+    local silverLabel = player.PlayerGui.CurrencyGui.Silver.Value
     local previousSilverValue = tonumber(silverLabel.Text)
 
-    local function sendSilverToWebSocket(silverAmount)
+   local function getInventory()
+    local inventory = {}
+    local itemCounts = {} -- A table to keep track of item counts
+
+    -- Loop through the backpack to count quantities of each item
+    for _, item in ipairs(player.Backpack:GetChildren()) do
+        local itemName = item.Name
+        local itemCount = item:IsA("Tool") and 1 or (item.Value or 1)
+
+        if itemCounts[itemName] then
+            itemCounts[itemName] = itemCounts[itemName] + itemCount
+        else
+            itemCounts[itemName] = itemCount
+        end
+    end
+
+    -- Create the inventory array by combining items with the same name
+    for itemName, itemCount in pairs(itemCounts) do
+        table.insert(inventory, { name = itemName, quantity = itemCount })
+    end
+
+    return inventory
+end
+
+
+    local function sendDataToWebSocket(silverAmount)
         local jsonData = HttpService:JSONEncode({
-            username = playerName, -- Include username
-            total_silver = tonumber(silverAmount)
+            username = playerName,
+            total_silver = tonumber(silverAmount),
+            inventory = getInventory()
         })
         socket:Send(jsonData)
         print("Sent to WebSocket: " .. jsonData)
     end
 
-    -- Track the change in silver and send updates
     RunService.Heartbeat:Connect(function()
         local currentSilverValue = tonumber(silverLabel.Text)
-
         if currentSilverValue ~= previousSilverValue then
             previousSilverValue = currentSilverValue
-            sendSilverToWebSocket(currentSilverValue)
+            sendDataToWebSocket(currentSilverValue)
         end
     end)
 
-    -- Listen for messages from the server
     socket.OnMessage:Connect(function(message)
         print("Message received from server: " .. message)
-
         local data = HttpService:JSONDecode(message)
         if data.action == "kick" then
-            Players.LocalPlayer:Kick("You have been kicked by the server.")
+            player:Kick("You have been kicked by the server.")
         end
     end)
 
-    -- Handle WebSocket closure
     socket.OnClose:Connect(function()
         print("WebSocket connection closed")
     end)
 else
     print("Failed to connect to WebSocket server.")
 end
+
 
 
 setupCharacter()
