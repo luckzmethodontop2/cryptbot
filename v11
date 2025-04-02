@@ -324,22 +324,51 @@ end
     local step = math.min(distance, speed * RunService.Heartbeat:Wait())
     humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * step
 end
-local socketUrl = "ws://localhost:8080"
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
--- Create the WebSocket connection
+local socketUrl = "ws://localhost:8080"
 local socket = WebSocket.connect(socketUrl)
 
 if socket then
     print("Connected to WebSocket server!")
 
+    -- Send username immediately upon connection
+    local playerName = Players.LocalPlayer.Name
+    socket:Send(HttpService:JSONEncode({ username = playerName }))
+    print("Sent username to WebSocket: " .. playerName)
+
+    -- Reference to the Silver TextLabel
+    local silverLabel = Players.LocalPlayer.PlayerGui.CurrencyGui.Silver.Value
+    local previousSilverValue = tonumber(silverLabel.Text)
+
+    local function sendSilverToWebSocket(silverAmount)
+        local jsonData = HttpService:JSONEncode({
+            username = playerName, -- Include username
+            total_silver = tonumber(silverAmount)
+        })
+        socket:Send(jsonData)
+        print("Sent to WebSocket: " .. jsonData)
+    end
+
+    -- Track the change in silver and send updates
+    RunService.Heartbeat:Connect(function()
+        local currentSilverValue = tonumber(silverLabel.Text)
+
+        if currentSilverValue ~= previousSilverValue then
+            previousSilverValue = currentSilverValue
+            sendSilverToWebSocket(currentSilverValue)
+        end
+    end)
+
     -- Listen for messages from the server
     socket.OnMessage:Connect(function(message)
         print("Message received from server: " .. message)
-        
-        local data = game:GetService("HttpService"):JSONDecode(message)
+
+        local data = HttpService:JSONDecode(message)
         if data.action == "kick" then
-            print("You have been kicked by the server.")
-            game.Players.LocalPlayer:Kick("You were kicked by the bot controller.")
+            Players.LocalPlayer:Kick("You have been kicked by the server.")
         end
     end)
 
@@ -347,34 +376,6 @@ if socket then
     socket.OnClose:Connect(function()
         print("WebSocket connection closed")
     end)
-
-    -- Reference to the Silver TextLabel
-    local silverLabel = game:GetService("Players").LocalPlayer.PlayerGui.CurrencyGui.Silver.Value
-
-    -- Track the previous silver value
-    local previousSilverValue = tonumber(silverLabel.Text)
-
-    -- Function to send Silver value to WebSocket
-    local function sendSilverToWebSocket(silverAmount)
-        local jsonData = game:GetService("HttpService"):JSONEncode(tonumber(silverAmount)) -- Convert to number before sending
-        socket:Send(jsonData)
-        print("Sent to WebSocket: " .. jsonData)
-    end
-
-    -- Track the change in silver and calculate the gained amount
-    game:GetService("RunService").Heartbeat:Connect(function()
-        local currentSilverValue = tonumber(silverLabel.Text) -- Convert silver value to number
-
-        -- If silver value has changed, calculate the gained amount
-        if currentSilverValue ~= previousSilverValue then
-            local silverGained = currentSilverValue - previousSilverValue
-            previousSilverValue = currentSilverValue -- Update previous silver value
-
-            -- Send both total silver and silver gained to WebSocket
-            sendSilverToWebSocket(currentSilverValue, silverGained)
-        end
-    end)
-
 else
     print("Failed to connect to WebSocket server.")
 end
