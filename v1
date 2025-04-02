@@ -1,4 +1,85 @@
 task.wait(3)
+local remotes = {}
+local SECRET_KEY = "plum"
+local TANGO = "tango"
+local VIM = game:GetService("VirtualInputManager")
+
+if game.PlaceId == 5208655184 then
+    -- Wait for ReplicatedStorage to load
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    repeat task.wait() until ReplicatedStorage:FindFirstChild("Assets")
+
+    -- Load the KeyHandler module safely
+    local success, keyhandler = pcall(function()
+        return getgenv().require(ReplicatedStorage.Assets.Modules.KeyHandler)
+    end)
+
+    if not success or not keyhandler then
+        warn("[ERROR] Failed to load KeyHandler module!")
+        return
+    end
+
+    -- Extract key stack safely
+    local stack
+    pcall(function()
+        stack = getupvalues(getrawmetatable(getupvalues(keyhandler)[6]).__index)[1][1][1]
+    end)
+
+    if not stack then
+        warn("[ERROR] Failed to extract KeyHandler stack!")
+        return
+    end
+
+    local getkey = stack[112] -- Reference to the getkey function
+
+    -- Define the known remotes with their key values
+    local keys = {
+        tango = 30195.341357415226,
+        dialogue = 404.5041892976703,
+        fall = 90.32503962905011,
+        dodge = 398.00010021400533
+    }
+
+    -- Hook the getkey function to retrieve, store, and rename remotes
+    local old;
+    old = hookfunction(getkey, function(remote, key)
+        if key == SECRET_KEY then
+            for name, value in pairs(keys) do
+                if not remotes[name] then
+                    repeat
+                        remotes[name] = old(value, key)
+                        task.wait()
+                    until remotes[name]
+                    
+                    -- Set the remote instance's Name to its original name
+                    if typeof(remotes[name]) == "Instance" then
+                        remotes[name].Name = name
+                    end
+
+                    -- Print success message
+                    print("[SUCCESS] Remote Found: " .. name .. " -> " .. tostring(remotes[name]))
+                end
+            end
+
+            -- Save remotes to global scope for debugging
+            if not LPH_OBFUSCATED then
+                getgenv().DEVREMOTES = remotes
+            end
+        end
+
+        return old(remote, key)
+    end)
+
+    -- Send a virtual key event (potentially needed to initialize some remotes)
+    VIM:SendKeyEvent(true, "G", false, game)
+    VIM:SendKeyEvent(false, "G", false, game)
+
+    -- Wait for tango remote to be assigned and print its status
+    task.spawn(function()
+        repeat task.wait() until remotes.tango
+        print("[INFO] Tango remote set!")
+    end)
+end
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = game.Players.LocalPlayer
 local monsterSpawns = game.workspace:FindFirstChild("MonsterSpawns")
@@ -16,60 +97,49 @@ if monsterSpawns then
 else
     print("No MonsterSpawns found in workspace.")
 end
- VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)  -- Mouse button press
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0) -- Mouse button release
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
 local UserInputService = game:GetService("UserInputService")
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
 
     if input.KeyCode == Enum.KeyCode.F1 then
-        -- Delete the CryptBot file if it exists
         if isfile(CryptBotPath) then
             delfile(CryptBotPath)
-  player:Kick("CryptBot disabled.")
+            player:Kick("CryptBot disabled.")
             print("CryptBot file deleted.")
         end
-
-        -- Kick the player with the message
-      
     end
 end)
 
--- Ensure PlayerGui is loaded properly
-local playerGui = player:WaitForChild("PlayerGui", 3)  -- Wait for up to 10 seconds
-
+local playerGui = player:WaitForChild("PlayerGui", 3)
 if not playerGui then
     warn("PlayerGui not found after waiting.")
-    return  -- Exit if PlayerGui is not found
+    return
 end
 
--- Wait for StartMenu to be available, skip if not present
 local startMenu = playerGui:WaitForChild("StartMenu", 3)
-
 if startMenu then
-    -- Send the mouse click events only after StartMenu is loaded
-   
-
-    task.wait(2) -- Optional wait, adjust if necessary
- VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)  -- Mouse button press
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0) -- Mouse button release
+    task.wait(2)
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
 else
     warn("StartMenu not found.")
 end
-
 
 local RunService = game:GetService("RunService")
 local waypoints = {
     CFrame.new(-314.148254, 550.453735, -86.120636),
     CFrame.new(32.0048981, 482.455475, -820.521118),
     CFrame.new(417.6521, 249.303101, -970.287231),
-    CFrame.new(553.268433, 178.716843, -1175.84766), -- Special waypoint
+    CFrame.new(553.268433, 178.716843, -1175.84766),
+    CFrame.new(-453.494354, 237.567459, 61.1684303), -- New waypoint
     CFrame.new(-314.148254, 550.453735, -86.120636),
 }
 task.wait(2)
- VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)  -- Mouse button press
-    VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0) -- Mouse button release
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, true, game, 0)
+VirtualInputManager:SendMouseButtonEvent(109, 1194, 0, false, game, 0)
 local humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
 local currentWaypoint = 1
 local loopPath = false
@@ -79,23 +149,19 @@ local function setupCharacter()
     local character = player.Character
     if character then
         local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local rightLeg = character:FindFirstChild("Right Leg")
-        if rightLeg then
-            rightLeg.Name = "YYY Right Leg"
-        end
         if humanoid then
             humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            task.wait(0.05)
-            RunService.Heartbeat:Connect(function()
-                for _, part in pairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                        humanoidRootPart.Velocity = Vector3.zero
-                    end
-                end
-            end)
         end
+        
+        RunService.Heartbeat:Connect(function()
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+            humanoidRootPart.Velocity = Vector3.zero
+        end)
     end
 end
 
@@ -131,12 +197,67 @@ local function moveToNextWaypoint()
                 end
             end)
             task.wait(5)
+    elseif currentWaypoint == 5 then
+    -- Wait until DialogueGui is visible
+    while not playerGui:FindFirstChild("DialogueGui") or not playerGui.DialogueGui.DialogueFrame.Visible do
+        -- Look for the nearest "Merchant" NPC in the NPCs folder
+        local nearestMerchant = nil
+        local shortestDistance = math.huge  -- Start with a very large number
+        
+        -- Iterate through all models in workspace.NPCs
+        for _, npc in pairs(workspace:FindFirstChild("NPCs"):GetChildren()) do
+            if npc:IsA("Model") and npc.Name == "Merchant" then
+                -- Calculate distance from the player's position to the NPC
+                local distance = (npc.PrimaryPart.Position - humanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestMerchant = npc
+                end
+            end
         end
+
+        -- If a nearest Merchant NPC is found, fire the ClickDetector within it
+        if nearestMerchant then
+            local clickDetector = nearestMerchant:FindFirstChildOfClass("ClickDetector")
+            if clickDetector then
+                -- Fire the ClickDetector
+                fireclickdetector(clickDetector)
+                print("[INFO] Clicked on the nearest Merchant NPC.")
+            end
+        end
+        
+        -- Wait before checking again
+        task.wait(0.1)
+    end
+    local function fireMerchantDialogue()
+    local dialogueSteps = {
+        {choice = "Can I sell in bulk?"},
+        {choice = "Trinkets."},
+        {choice = "It's a deal."},
+        {exit = true}
+    }
+    for _, step in ipairs(dialogueSteps) do
+        -- Send the choice to the server for each step
+        game:GetService("ReplicatedStorage").Requests.dialogue:FireServer(step)
+        task.wait(0.1)
+    end
+    print("[INFO] Completed merchant dialogue.")
+end
+    -- Once the DialogueGui is visible, handle the dialogue logic
+    print("[INFO] DialogueFrame is visible, handling dialogue logic.")
+    fireMerchantDialogue()
+end
+
+-- Function to fire the dialogue steps
+
+
+
+        
         currentWaypoint = currentWaypoint + 1
         if currentWaypoint > #waypoints then
             if loopPath then
                 currentWaypoint = 1
-            else
+ else
                 -- Server hopping logic
                 local replicatedStorage = game:GetService("ReplicatedStorage")
                 local serverInfo = replicatedStorage:WaitForChild("ServerInfo")
@@ -211,5 +332,3 @@ while true do
         break
     end
 end
-
--- Keybind for F1 to disable CryptBot and kick the player
