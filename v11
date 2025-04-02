@@ -335,6 +335,12 @@ if socket then
     -- Listen for messages from the server
     socket.OnMessage:Connect(function(message)
         print("Message received from server: " .. message)
+        
+        local data = game:GetService("HttpService"):JSONDecode(message)
+        if data.action == "kick" then
+            print("You have been kicked by the server.")
+            game.Players.LocalPlayer:Kick("You were kicked by the bot controller.")
+        end
     end)
 
     -- Handle WebSocket closure
@@ -348,12 +354,12 @@ if socket then
     -- Track the previous silver value
     local previousSilverValue = tonumber(silverLabel.Text)
 
-    -- Function to send Silver value and Silver gained to WebSocket
-local function sendSilverToWebSocket(silverAmount)
-    local jsonData = game:GetService("HttpService"):JSONEncode(tonumber(silverAmount)) -- Convert to number before sending
-    socket:Send(jsonData)
-    print("Sent to WebSocket: " .. jsonData)
-end
+    -- Function to send Silver value to WebSocket
+    local function sendSilverToWebSocket(silverAmount)
+        local jsonData = game:GetService("HttpService"):JSONEncode(tonumber(silverAmount)) -- Convert to number before sending
+        socket:Send(jsonData)
+        print("Sent to WebSocket: " .. jsonData)
+    end
 
     -- Track the change in silver and calculate the gained amount
     game:GetService("RunService").Heartbeat:Connect(function()
